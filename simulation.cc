@@ -101,7 +101,14 @@ int main(int argc, char *argv[])
   sinkApps.Stop(Seconds(15.));
   
   // Flow setting
-
+  uint16_t port = 9;
+  BulkSendHelper source("ns3::TcpSocketFactory", 
+      InetSocketAddress(p2pInterfacesNaNe.GetAddress(0), port));
+  source.SetAttribute("MaxBytes", UintegerValue(0));
+  ApplicationContainer sourceApps = source.Install(naNe.Get(0));
+  sourceApps.Start(Seconds(0.));
+  sourceApps.Stop(Seconds(15.));
+  
 
   std::cout << "Hello WorldDDDD";
   return 0;  
