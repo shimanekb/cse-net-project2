@@ -40,11 +40,29 @@ int main(int argc, char *argv[])
   ndNe.Add(ne.Get(0));
 
   // Configure Connections
-  PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
-  pointToPoint.SetChannelAttribute("Delay", TimeValue(MilliSeconds(.5)));
-  NetDeviceContainer p2pDevices;
-  p2pDevices= pointToPoint.Install(naNe);
+  PointToPointHelper pointToPointNaNe;
+  pointToPointNaNe.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  pointToPointNaNe.SetChannelAttribute("Delay", TimeValue(MilliSeconds(.5)));
+  NetDeviceContainer p2pDevicesNaNe;
+  p2pDevicesNaNe = pointToPointNaNe.Install(naNe);
+
+  PointToPointHelper pointToPointNbNd;
+  pointToPointNbNd.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  pointToPointNbNd.SetChannelAttribute("Delay", TimeValue(MilliSeconds(.5)));
+  NetDeviceContainer p2pDevicesNbNd;
+  p2pDevicesNbNd = pointToPointNbNd.Install(nbNd);
+
+  PointToPointHelper pointToPointNcNd;
+  pointToPointNcNd.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  pointToPointNcNd.SetChannelAttribute("Delay", TimeValue(MilliSeconds(.5)));
+  NetDeviceContainer p2pDevicesNcNd;
+  p2pDevicesNcNd = pointToPointNcNd.Install(ncNd);
+
+  PointToPointHelper pointToPointNdNe;
+  pointToPointNdNe.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  pointToPointNdNe.SetChannelAttribute("Delay", TimeValue(MilliSeconds(.5)));
+  NetDeviceContainer p2pDevicesNdNe;
+  p2pDevicesNdNe = pointToPointNdNe.Install(ndNe);
 
   std::cout << "Hello WorldDDDD";
   return 0;  
