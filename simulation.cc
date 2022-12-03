@@ -124,6 +124,19 @@ int main(int argc, char *argv[])
   // Configure routing tables
   Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
+  // Animation 
+  AnimationInterface anim("test.xml");
+  anim.SetConstantPosition(naNe.Get(0), 5.0, 20.0);
+  anim.SetConstantPosition(nbNd.Get(0), 5.0, 10.0);
+  anim.SetConstantPosition(ncNd.Get(0), 5.0, 0.0);
+
+
+  anim.SetConstantPosition(naNe.Get(1), 20.0, 10.0);
+  anim.SetConstantPosition(ndNe.Get(1), 20.0, 10.0);
+  anim.SetConstantPosition(ndNe.Get(0), 10.0, 10.0);
+  anim.SetConstantPosition(nbNd.Get(1), 10.0, 10.0);
+  anim.SetConstantPosition(ncNd.Get(1), 10.0, 10.0);
+
   // Run Simulation
   Simulator::Stop(Seconds(60));
   Simulator::Run();
