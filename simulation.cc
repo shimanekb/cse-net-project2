@@ -91,6 +91,16 @@ int main(int argc, char *argv[])
   p2pInterfacesNdNe = addressNdNe.Assign(p2pDevicesNdNe);
 
 
+  // Sink deploy
+  uint16_t sinkPort = 8080;
+  Address sinkAddress(InetSocketAddress(p2pInterfacesNdNe.GetAddress(1), sinkPort));
+  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory",
+      InetSocketAddress (Ipv4Address::GetAny(), sinkPort));
+  ApplicationContainer sinkApps = packetSinkHelper.Install(ndNe.Get(1));
+  sinkApps.Start(Seconds(0.));
+  sinkApps.Stop(Seconds(15.));
+  
+  // Flow setting
 
 
   std::cout << "Hello WorldDDDD";
