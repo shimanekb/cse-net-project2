@@ -102,13 +102,38 @@ int main(int argc, char *argv[])
   
   // Flow setting
   uint16_t port = 9;
-  BulkSendHelper source("ns3::TcpSocketFactory", 
+  BulkSendHelper sourceA("ns3::TcpSocketFactory", 
       InetSocketAddress(p2pInterfacesNaNe.GetAddress(0), port));
-  source.SetAttribute("MaxBytes", UintegerValue(0));
-  ApplicationContainer sourceApps = source.Install(naNe.Get(0));
-  sourceApps.Start(Seconds(0.));
-  sourceApps.Stop(Seconds(15.));
-  
+  sourceA.SetAttribute("MaxBytes", UintegerValue(0));
+  ApplicationContainer sourceAppsA = sourceA.Install(naNe.Get(0));
+  sourceAppsA.Start(Seconds(0.));
+  sourceAppsA.Stop(Seconds(15.));
+
+  BulkSendHelper sourceB("ns3::TcpSocketFactory", 
+      InetSocketAddress(p2pInterfacesNbNd.GetAddress(0), port));
+  sourceB.SetAttribute("MaxBytes", UintegerValue(0));
+  ApplicationContainer sourceAppsB = sourceB.Install(nbNd.Get(0));
+  sourceAppsB.Start(Seconds(0.));
+  sourceAppsB.Stop(Seconds(15.));
+
+  // First connection path from node c
+  BulkSendHelper sourceC1("ns3::TcpSocketFactory", 
+      InetSocketAddress(p2pInterfacesNcNd.GetAddress(0), port));
+  sourceC1.SetAttribute("MaxBytes", UintegerValue(0));
+  ApplicationContainer sourceAppsC1 = sourceC1.Install(ncNd.Get(0));
+  sourceAppsC1.Start(Seconds(3.));
+  sourceAppsC1.Stop(Seconds(15.));
+
+  // Second connection path from node c
+  uint16_t port2 = 10;
+  BulkSendHelper sourceC2("ns3::TcpSocketFactory", 
+      InetSocketAddress(p2pInterfacesNcNd.GetAddress(0), port2));
+  sourceC2.SetAttribute("MaxBytes", UintegerValue(0));
+  ApplicationContainer sourceAppsC2 = sourceC2.Install(ncNd.Get(0));
+  sourceAppsC2.Start(Seconds(7.));
+  sourceAppsC2.Stop(Seconds(12.));
+
+
 
   std::cout << "Hello WorldDDDD";
   return 0;  
