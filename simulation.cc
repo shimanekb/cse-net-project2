@@ -64,6 +64,35 @@ int main(int argc, char *argv[])
   NetDeviceContainer p2pDevicesNdNe;
   p2pDevicesNdNe = pointToPointNdNe.Install(ndNe);
 
+  // Config source and dest addresses
+  InternetStackHelper stack;
+  stack.Install(naNe);
+  stack.Install(nbNd);
+  stack.Install(ncNd.Get(0));
+
+  Ipv4AddressHelper addressNaNe;
+  addressNaNe.SetBase("10.1.1.0", "255.255.255.0");
+  Ipv4InterfaceContainer p2pInterfacesNaNe;
+  p2pInterfacesNaNe = addressNaNe.Assign(p2pDevicesNaNe);
+
+  Ipv4AddressHelper addressNbNd;
+  addressNbNd.SetBase("10.1.2.0", "255.255.255.0");
+  Ipv4InterfaceContainer p2pInterfacesNbNd;
+  p2pInterfacesNbNd = addressNbNd.Assign(p2pDevicesNbNd);
+
+  Ipv4AddressHelper addressNcNd;
+  addressNcNd.SetBase("10.1.3.0", "255.255.255.0");
+  Ipv4InterfaceContainer p2pInterfacesNcNd;
+  p2pInterfacesNcNd = addressNcNd.Assign(p2pDevicesNcNd);
+
+  Ipv4AddressHelper addressNdNe;
+  addressNdNe.SetBase("10.1.4.0", "255.255.255.0");
+  Ipv4InterfaceContainer p2pInterfacesNdNe;
+  p2pInterfacesNdNe = addressNdNe.Assign(p2pDevicesNdNe);
+
+
+
+
   std::cout << "Hello WorldDDDD";
   return 0;  
 }
