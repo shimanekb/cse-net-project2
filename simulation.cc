@@ -13,6 +13,10 @@ NS_LOG_COMPONENT_DEFINE("Topology CSE Networks Simulation");
 
 int main(int argc, char *argv[])
 {
+  // Logging config
+  LogComponentEnable("BulkSendApplication", LOG_LEVEL_INFO);
+  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+
   // Nodes
   NodeContainer na;
   na.Create(1);
@@ -136,6 +140,16 @@ int main(int argc, char *argv[])
   // Configure routing tables
   Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
+  // Tracer
+  pointToPointNaNe.EnablePcapAll("second");
+  pointToPointNbNd.EnablePcapAll("second");
+  pointToPointNcNd.EnablePcapAll("second");
+  pointToPointNdNe.EnablePcapAll("second");
+
+  // Run Simulation
+  Simulator::Stop(Seconds(60));
+  Simulator::Run();
+  Simulator::Destroy();
   std::cout << "Hello WorldDDDD";
   return 0;  
 }
