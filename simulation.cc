@@ -133,7 +133,8 @@ int main(int argc, char *argv[])
   sourceAppsC2.Start(Seconds(7.));
   sourceAppsC2.Stop(Seconds(12.));
 
-
+  // Configure routing tables
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
   std::cout << "Hello WorldDDDD";
   return 0;  
