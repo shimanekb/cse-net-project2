@@ -9,16 +9,20 @@
 #include "ns3/netanim-module.h"
 #include "ns3/flow-monitor-module.h"
 #include "ns3/flow-monitor-helper.h"
+#include "ns3/ipv4-flow-classifier.h"
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Topology CSE Networks Simulation");
 
+FlowMonitorHelper flowHelper;
 Ptr<FlowMonitor> monitor;
 
 void averageThroughput()
 {
+
     std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
+    Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowHelper.GetClassifier());
     float totalThroughPut = 0;
     for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin();
         i != stats.end(); ++i)
@@ -30,7 +34,9 @@ void averageThroughput()
             throughPutMbs = (throughPut / 1000) / 1000; 
         }
 
-        std::cout << "Flow " << i->first << "\n";
+        Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow(i->first);
+        std::cout << "Flow " << i->first << " (" << t.sourceAddress << "->" 
+            << t.destinationAddress << ")\n";
         std::cout << " Tx Packets: " << i->second.txPackets << "\n";
         std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
         std::cout << " TxOffered: " << i->second.txBytes * 8.0 / 
@@ -162,8 +168,7 @@ int main(int argc, char *argv[])
   // Configure routing tables
   Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
-    // Schedule monitoring
-  FlowMonitorHelper flowHelper;
+  // Schedule monitoring
   monitor = flowHelper.InstallAll();
 
   // Creating file to hold throughput information
