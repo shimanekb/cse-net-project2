@@ -1,6 +1,7 @@
 #!/bin/bash
 
-NS_PATH=../ns3/ns-allinone-3.37/ns-3.37/
+NS_PATH="../ns3/bake/source/ns-3.37"
+
 SCRATCH_PATH=$NS_PATH/scratch
 SCRIPT_NAME=simulation.cc
 
