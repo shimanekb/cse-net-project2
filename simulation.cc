@@ -16,9 +16,36 @@ NS_LOG_COMPONENT_DEFINE("Topology CSE Networks Simulation");
 
 Ptr<FlowMonitor> monitor;
 
+void averageThroughput()
+{
+    std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
+    float totalThroughPut = 0;
+    for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin();
+        i != stats.end(); ++i)
+    {
+        double recievedBytes = i->second.rxBytes * 8.0;
+        double throughPutMbs = 0;
+        if (recievedBytes != 0) {
+            double throughPut = (i -> second.rxBytes * 8.0) / (i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds());
+            throughPutMbs = (throughPut / 1000) / 1000; 
+        }
+
+        std::cout << "Flow " << i->first << "\n";
+        std::cout << " Tx Packets: " << i->second.txPackets << "\n";
+        std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
+        std::cout << " TxOffered: " << i->second.txBytes * 8.0 / 
+            (i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds()) / 1000 / 1000 << " Mbps\n";
+        std::cout << " Rx Packets: " << i->second.rxPackets << "\n";
+        std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
+        std::cout << " Throughput: " << throughPutMbs << " Mbps\n";
+        totalThroughPut = totalThroughPut + throughPutMbs;
+    }
+
+    std::cout << "Total Throughput: " << totalThroughPut << " Mbps\n";
+}
+
 void CalculateThroughput()
 {
-
     std::ofstream throughputFile;
     throughputFile.open("throughput_vs_time.csv", std::ofstream::app);
     std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
@@ -43,8 +70,8 @@ void CalculateThroughput()
 int main(int argc, char *argv[])
 {
   // Logging config
-  LogComponentEnable("BulkSendApplication", LOG_LEVEL_INFO);
-  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+  //LogComponentEnable("BulkSendApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
 
   // Create and Connect Nodes
@@ -64,6 +91,8 @@ int main(int argc, char *argv[])
 
   // Configure Connections
   PointToPointHelper pointToPoint;
+  pointToPoint.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  pointToPoint.SetChannelAttribute("Delay", StringValue("0.5ms"));
   NetDeviceContainer p2pDevicesNaNe;
   p2pDevicesNaNe = pointToPoint.Install(naNe);
 
@@ -111,7 +140,7 @@ int main(int argc, char *argv[])
   // Flow setting
   BulkSendHelper source("ns3::TcpSocketFactory", 
       InetSocketAddress(p2pInterfacesNaNe.GetAddress(1), port));
-  source.SetAttribute("MaxBytes", UintegerValue(200000));
+  source.SetAttribute("MaxBytes", UintegerValue(500000));
   ApplicationContainer sourceAppsA = source.Install(naNe.Get(0));
   sourceAppsA.Start(Seconds(0.));
   sourceAppsA.Stop(Seconds(15.));
@@ -159,8 +188,9 @@ int main(int argc, char *argv[])
   Simulator::Stop(Seconds(60));
   Simulator::Run();
   Simulator::Destroy();
-
   
+  averageThroughput();
+
   return 0;  
 }
 
