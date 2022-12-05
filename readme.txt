@@ -42,3 +42,7 @@ How to Generate Animation of Topology
 2. Run the simulation (refer to How to Run)
 3. Open net anim
 4. Open test.xml generated from running the simulation in net anim
+
+How to Generate Throughput vs Time Graph
+----------------------------------------
+For the graph I used
