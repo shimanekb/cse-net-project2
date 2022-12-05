@@ -18,43 +18,65 @@ NS_LOG_COMPONENT_DEFINE("Topology CSE Networks Simulation");
 FlowMonitorHelper flowHelper;
 Ptr<FlowMonitor> monitor;
 
+/**
+ * Calculates average throughput after the simulation, and displays for each flow the 
+ * throughput and its associated stats.
+*/
 void averageThroughput()
 {
-
     std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
     Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowHelper.GetClassifier());
     float totalThroughPut = 0;
+    int numberOfFlows = 0;
     for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin();
         i != stats.end(); ++i)
     {
         double recievedBytes = i->second.rxBytes * 8.0;
         double throughPutMbs = 0;
+        ++numberOfFlows;
+
+        /**
+         * Incase there was no throughput at a given moment avoid divide by zero. This should not happen for calculations
+         * at the end of a simulation.
+        */
         if (recievedBytes != 0) {
             double throughPut = (i -> second.rxBytes * 8.0) / (i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds());
             throughPutMbs = (throughPut / 1000) / 1000; 
         }
 
+        // Get flow source and dest addresses
         Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow(i->first);
         std::cout << "Flow " << i->first << " (" << t.sourceAddress << "->" 
             << t.destinationAddress << ")\n";
+
+        // Display packet send and receive stats
         std::cout << " Tx Packets: " << i->second.txPackets << "\n";
         std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
         std::cout << " TxOffered: " << i->second.txBytes * 8.0 / 
             (i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds()) / 1000 / 1000 << " Mbps\n";
         std::cout << " Rx Packets: " << i->second.rxPackets << "\n";
         std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
+
+        // Display throughput
         std::cout << " Throughput: " << throughPutMbs << " Mbps\n";
         totalThroughPut = totalThroughPut + throughPutMbs;
     }
 
-    std::cout << "Total Throughput: " << totalThroughPut << " Mbps\n";
+    float averageThroughPut = totalThroughPut / numberOfFlows;
+    std::cout << "Average Throughput: " << averageThroughPut << " Mbps\n";
 }
 
+/**
+ * Runs periodically during the simulation, calculating current througput for each flow,
+ * and records the measurements int a csv file.
+*/
 void CalculateThroughput()
 {
     std::ofstream throughputFile;
     throughputFile.open("throughput_vs_time.csv", std::ofstream::app);
     std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
+
+    // Get current simulation time, to know what throughput was at a given moment.
     ns3::Time simTime = Simulator::Now();
     for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin();
         i != stats.end(); ++i)
@@ -62,24 +84,27 @@ void CalculateThroughput()
         double recievedBytes = i->second.rxBytes * 8.0;
         double throughPutMbs = 0;
 
+        /**
+         * Incase there was no throughput at a given moment avoid divide by zero. This could happen if calculation is done before any 
+         * flow activity has happened.
+        */
+
         if (recievedBytes != 0) {
             double throughPut = (i -> second.rxBytes * 8.0) / (i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds());
             throughPutMbs = (throughPut / 1000) / 1000; 
         }
 
+        // Record throughPutMbs, time in simulation in seconds, and flow number.
         throughputFile << throughPutMbs << "," << simTime.GetSeconds() << ",\"Flow " << i->first <<"\"\n";
     }
     throughputFile.close();
+
+    // Reschedule again to take another measurement.
     Simulator::Schedule(MilliSeconds(100), &CalculateThroughput);
 }
 
 int main(int argc, char *argv[])
 {
-  // Logging config
-  //LogComponentEnable("BulkSendApplication", LOG_LEVEL_INFO);
-  //LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
-
-
   // Create and Connect Nodes
   NodeContainer naNe;
   naNe.Create(2);
@@ -95,8 +120,11 @@ int main(int argc, char *argv[])
   ndNe.Add(nbNd.Get(1));
   ndNe.Add(naNe.Get(1));
 
-  // Configure Connections
+  // Configure pont to point Connections
   PointToPointHelper pointToPoint;
+
+  // Sense channel and device attributes are all the same for each path,
+  // I am reusing the same point to point helper
   pointToPoint.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
   pointToPoint.SetChannelAttribute("Delay", StringValue("0.5ms"));
   NetDeviceContainer p2pDevicesNaNe;
@@ -117,6 +145,7 @@ int main(int argc, char *argv[])
   stack.Install(nbNd);
   stack.Install(ncNd.Get(0));
 
+  // Assigning addresses
   Ipv4AddressHelper address;
   address.SetBase("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer p2pInterfacesNaNe;
@@ -135,7 +164,7 @@ int main(int argc, char *argv[])
   p2pInterfacesNdNe = address.Assign(p2pDevicesNdNe);
 
 
-  // Sink deploy
+  // Sink deploy, Server at destination host.
   uint16_t port = 9;
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory",
       InetSocketAddress (Ipv4Address::GetAny(), port));
@@ -143,7 +172,8 @@ int main(int argc, char *argv[])
   sinkApps.Start(Seconds(0.));
   sinkApps.Stop(Seconds(15.));
   
-  // Flow setting
+  // Flow setting, Client at source hosts. Sending 500,000 bytes at each
+  // Client. Unlimited overwhelms my home computer.
   BulkSendHelper source("ns3::TcpSocketFactory", 
       InetSocketAddress(p2pInterfacesNaNe.GetAddress(1), port));
   source.SetAttribute("MaxBytes", UintegerValue(500000));
@@ -171,7 +201,8 @@ int main(int argc, char *argv[])
   // Schedule monitoring
   monitor = flowHelper.InstallAll();
 
-  // Creating file to hold throughput information
+  // Creating file to hold throughput information, placing title row at top
+  // Truncates if file already exists for fresh data.
   std::ofstream throughputFile;
   throughputFile.open("throughput_vs_time.csv", std::ofstream::trunc);
   throughputFile << "\"Throughput (Mbps)\",\"Time (s)\",\"Flow\"\n" ;
@@ -187,15 +218,19 @@ int main(int argc, char *argv[])
   anim.SetConstantPosition(naNe.Get(1), 80.0, 30.0);
   anim.SetConstantPosition(ndNe.Get(0), 40.0, 60.0);
 
-  Simulator::Schedule(MilliSeconds(10000), &CalculateThroughput);
+  // Schedule first calculate throughput measuring. Will
+  // recursively take measurements during the simulation.
+  Simulator::Schedule(MilliSeconds(100), &CalculateThroughput);
 
   // Run Simulation
   Simulator::Stop(Seconds(60));
   Simulator::Run();
   Simulator::Destroy();
   
+  // Record average throughput stats
   averageThroughput();
 
+  // fin
   return 0;  
 }
 
