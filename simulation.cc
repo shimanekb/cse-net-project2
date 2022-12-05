@@ -172,11 +172,11 @@ int main(int argc, char *argv[])
   sinkApps.Start(Seconds(0.));
   sinkApps.Stop(Seconds(15.));
   
-  // Flow setting, Client at source hosts. Sending 500,000 bytes at each
+  // Flow setting, Client at source hosts. Sending 1,000,000 bytes at each
   // Client. Unlimited overwhelms my home computer.
   BulkSendHelper source("ns3::TcpSocketFactory", 
       InetSocketAddress(p2pInterfacesNaNe.GetAddress(1), port));
-  source.SetAttribute("MaxBytes", UintegerValue(500000));
+  source.SetAttribute("MaxBytes", UintegerValue(1000000));
   ApplicationContainer sourceAppsA = source.Install(naNe.Get(0));
   sourceAppsA.Start(Seconds(0.));
   sourceAppsA.Stop(Seconds(15.));

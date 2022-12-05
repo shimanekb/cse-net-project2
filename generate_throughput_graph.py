@@ -27,5 +27,8 @@ for flow_id in flows:
     flow = flows[flow_id]
     plt.plot(flow.x, flow.y, label = flow.flow_id)
 
+plt.title('Throughput vs Time')
+plt.xlabel('Times (s)')
+plt.ylabel('Throughput (Mbps)')
 plt.legend()
-plt.show()
+plt.savefig('results/throughput_vs_time.png')
